@@ -197,6 +197,6 @@ type TPayment = 'card' | 'cash' | '';
 
 Методы класса:
 
-`getProductList(): IApiProductList` - метод выполняет get-запрос на сервер для получения массива данных с товарами  
+`getProductList(): Promise<IApiProductList>` - метод выполняет get-запрос на сервер для получения массива данных с товарами  
 
-`postBuyerData(data: IApiBuyerPostData): IApiPostResponseSuccess | IApiPostResponseError` - метод для отправки данных покупателя на сервер. Выполняет post-запрос на сервер с помощью метода `post` класса `Api`. В запросе передаются поля `IBuyer`, стоимость корзины в поле `total` и массив идентификаторов товаров из корзины в поле `items`. При успешном запросе сервер вернет `id` заказа и его стоимость в поле `total`. При ошибке запроса сервер вернет объект `IApiPostResponseError` с описанием ошибки в поле `error` 
+`postBuyerData(data: IApiBuyerPostData): Promise<IApiPostResponseSuccess | IApiPostResponseError>` - метод для отправки данных покупателя на сервер. Выполняет post-запрос на сервер с помощью метода `post` класса `Api`. В запросе передаются поля `IBuyer`, стоимость корзины в поле `total` и массив идентификаторов товаров из корзины в поле `items`. При успешном запросе сервер вернет `id` заказа и его стоимость в поле `total`. При ошибке запроса сервер вернет объект `IApiPostResponseError` с описанием ошибки в поле `error` 
