@@ -8,11 +8,16 @@ import { ProductCatalog } from './components/models/ProductCatalog.ts';
 import { Buyer } from './components/models/Buyer.ts';
 import './scss/styles.scss';
 
-
+/**
+ * создание экземпляра ApiService и проверка методов работы с сервером
+ */
 
 const api = new Api(API_URL);
 
 const apiService = new ApiService(api);
+
+// получение данных о товарах от сервера
+console.log('получение данных о товарах от сервера');
 
 const products = await apiService.getProductList();
 
@@ -20,11 +25,14 @@ products.items.forEach(item => {
   console.log(item.id, item.image);
 })
 
-const buyerData: IApiBuyerPostData = {
+// тест отправки корректных данных на сервер
+console.log('тест отправки корректных данных на сервер');
+
+const buyerDataCorrect: IApiBuyerPostData = {
     "payment": "cash",
     "email": "test@test.ru",
     "phone": "+71234567890",
-    "address": "egerer",
+    "address": "Spb Vosstania 1",
     "total": 2200,
     "items": [
         "854cef69-976d-4c2a-a18c-2aa45046c390",
@@ -33,15 +41,85 @@ const buyerData: IApiBuyerPostData = {
 }
 
 try {
-  const postResp = await apiService.postBuyerData(buyerData);
+  const postResp = await apiService.postBuyerData(buyerDataCorrect);
+  console.log(postResp)
+} catch (error) {
+  console.log(error)
+}
+
+// тест отправки некорректного id товара на сервер
+console.log('тест отправки некорректного id товара на сервер');
+
+const buyerDataItemIdIncorrect: IApiBuyerPostData = {
+    "payment": "cash",
+    "email": "test@test.ru",
+    "phone": "+71234567890",
+    "address": "Spb Vosstania 1",
+    "total": 2200,
+    "items": [
+        "854cef69-976d-4c2a-a18c-2aa45046c390",
+        "c101ab44-ed99-4a54-990d-47aa2bb4e7d"
+    ]
+}
+
+try {
+  const postResp = await apiService.postBuyerData(buyerDataItemIdIncorrect);
+  console.log(postResp)
+} catch (error) {
+  console.log(error)
+}
+
+// тест отправки некорректного суммы заказа на сервер
+console.log('тест отправки некорректного суммы заказа на сервер');
+
+const buyerDataTotalIncorrect: IApiBuyerPostData = {
+    "payment": "cash",
+    "email": "test@test.ru",
+    "phone": "+71234567890",
+    "address": "Spb Vosstania 1",
+    "total": 1200,
+    "items": [
+        "854cef69-976d-4c2a-a18c-2aa45046c390",
+        "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
+    ]
+}
+
+try {
+  const postResp = await apiService.postBuyerData(buyerDataTotalIncorrect);
+  console.log(postResp)
+} catch (error) {
+  console.log(error)
+}
+
+// тест отправки некорректного адреса заказа на сервер
+console.log('тест отправки некорректного адреса заказа на сервер');
+
+const buyerDataAddressIncorrect: IApiBuyerPostData = {
+    "payment": "cash",
+    "email": "test@test.ru",
+    "phone": "+71234567890",
+    "address": "",
+    "total": 2200,
+    "items": [
+        "854cef69-976d-4c2a-a18c-2aa45046c390",
+        "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
+    ]
+}
+
+try {
+  const postResp = await apiService.postBuyerData(buyerDataAddressIncorrect);
   console.log(postResp)
 } catch (error) {
   console.log(error)
 }
 
 
-// код ниже - тест модеоей данных из коммита d7dfdff77836b3d4116f665830beb4fa5181b288 ветки dev
+/**
+ * тест моделей данных
+ */
 
+// создание экземпляра productsModel и вовод id товоров в консоль
+console.log('создание экземпляра productsModel и вовод id товоров в консоль');
 
 const productsModel = new ProductCatalog(products.items);
 
@@ -49,11 +127,17 @@ productsModel.items.forEach(item => {
   console.log(`Товар из каталога: ${item.id}`);
 })
 
+// проверка работы поля selectedItem
+console.log('проверка работы поля selectedItem');
+
 console.log(`selectedItem до выбора: ${productsModel.selectedItem}`);
 
 productsModel.selectedItem = products.items[0];
 
 console.log(`selectedItem после выбора: ${productsModel.selectedItem.id}`);
+
+// создание экземпляра корзины Basket. тест метод Basket
+console.log('создание экземпляра корзины Basket. тест метод Basket');
 
 const basket = new Basket();
 
@@ -94,6 +178,8 @@ console.log(`наличие товара (несуществующего): ${bas
 console.log(`наличие товара (несуществующего): ${basket.has('')}`);
 console.log(`наличие товара (несуществующего): ${basket.has('abc')}`);
 
+// создание экземпляра Buyer и тест его методов
+console.log('создание экземпляра Buyer и тест его методов');
 
 const buyer = new Buyer();
 
@@ -113,21 +199,21 @@ console.log(`валидация покупателя с данными payment: 
 
 buyer.saveData({'address': '5 ave, NY'});
 
-console.log(`покупатель с данными address: ${Object.entries(buyer.getData())}`);
+console.log(`покупатель с данными payment, address: ${Object.entries(buyer.getData())}`);
 
-console.log(`валидация покупателя с данными address: ${Object.entries(buyer.validateData())}`);
+console.log(`валидация покупателя с данными payment, address: ${Object.entries(buyer.validateData())}`);
 
 buyer.saveData({'email': 'a@a.a'});
 
-console.log(`покупатель с данными email: ${Object.entries(buyer.getData())}`);
+console.log(`покупатель с данными payment, address, email: ${Object.entries(buyer.getData())}`);
 
-console.log(`валидация покупателя с данными email: ${Object.entries(buyer.validateData())}`);
+console.log(`валидация покупателя с данными payment, address, email: ${Object.entries(buyer.validateData())}`);
 
 buyer.saveData({'phone': '123'});
 
-console.log(`покупатель с данными phone: ${Object.entries(buyer.getData())}`);
+console.log(`покупатель с данными payment, address, email, phone: ${Object.entries(buyer.getData())}`);
 
-console.log(`валидация покупателя с данными phone: ${Object.entries(buyer.validateData())}`);
+console.log(`валидация покупателя с данными payment, address, email, phone: ${Object.entries(buyer.validateData())}`);
 
 buyer.clearData();
 
@@ -138,4 +224,5 @@ buyer.saveData({'address': '5 ave, NY'});
 buyer.saveData({'email': 'a@a.a'});
 buyer.saveData({'phone': '123'});
 
-console.log(buyer.payment, buyer.address , buyer.email , buyer.phone );
+console.log('обращение к полям класса:');
+console.log(buyer.payment, buyer.address , buyer.email , buyer.phone);
