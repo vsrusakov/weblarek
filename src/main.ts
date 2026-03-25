@@ -118,8 +118,8 @@ try {
  * тест моделей данных
  */
 
-// создание экземпляра productsModel и вовод id товоров в консоль
-console.log('создание экземпляра productsModel и вовод id товоров в консоль');
+// создание экземпляра productsModel и вывод id товаров в консоль
+console.log('создание экземпляра productsModel и вывод id товаров в консоль');
 
 const productsModel = new ProductCatalog(products.items);
 
@@ -136,8 +136,8 @@ productsModel.selectedItem = products.items[0];
 
 console.log(`selectedItem после выбора: ${productsModel.selectedItem.id}`);
 
-// создание экземпляра корзины Basket. тест метод Basket
-console.log('создание экземпляра корзины Basket. тест метод Basket');
+// создание экземпляра корзины Basket. тест методов Basket
+console.log('создание экземпляра корзины Basket. тест методов Basket');
 
 const basket = new Basket();
 
@@ -163,9 +163,9 @@ basket.add(products.items[0]);
 basket.add(products.items[2]);
 basket.add(products.items[3]);
 basket.add(products.items[4]);
-basket.add(products.items[44]);
+basket.add(products.items[5]);
 
-console.log(`Товар из корзины: ${products.items[44]}`);
+console.log(`Товар из корзины: ${products.items[5]}`);
 
 console.log(`цена корзины: ${basket.getTotalCost()}`);
 
@@ -224,5 +224,5 @@ buyer.saveData({'address': '5 ave, NY'});
 buyer.saveData({'email': 'a@a.a'});
 buyer.saveData({'phone': '123'});
 
-console.log('обращение к полям класса:');
-console.log(buyer.payment, buyer.address , buyer.email , buyer.phone);
+// console.log('обращение к полям класса:');
+// console.log(buyer.payment, buyer.address , buyer.email , buyer.phone);

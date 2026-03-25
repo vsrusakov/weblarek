@@ -15,7 +15,7 @@ export class Basket {
    * @param value - новый товар
    */
   add(value: IProduct) {
-    if (value) this._items.push(value);
+    this._items.push(value);
   }
 
   /**
@@ -27,10 +27,10 @@ export class Basket {
   }
 
   /**
-   * Метод возвращает количество товаров в корзине
+   * Количество товаров в корзине
    * @returns количество товаров в корзине
    */
-  size(): number {
+  get size(): number {
     return this._items.length;
   }
 

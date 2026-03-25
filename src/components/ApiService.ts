@@ -41,10 +41,7 @@ export class ApiService {
    * @returns количество товаров в поле `total`, массив с описанием товаров в поле `items`
    */
   async getProductList(): Promise<IApiProductList> {
-    let products: IApiProductList | void;
-
-    products = await this.api.get<IApiProductList>(this.productUri);
-
+    let products = await this.api.get<IApiProductList>(this.productUri);
     return products || [];
   }
 
@@ -57,10 +54,7 @@ export class ApiService {
   async postBuyerData(
     data: IApiBuyerPostData,
   ): Promise<IApiPostResponseSuccess | IApiPostResponseError> {
-    let response: IApiPostResponseSuccess | IApiPostResponseError;
-
-    response = await this.api.post<IApiPostResponseSuccess | IApiPostResponseError>(this.postOrderUri, data);
-
+    let response = await this.api.post<IApiPostResponseSuccess | IApiPostResponseError>(this.postOrderUri, data);
     return response;
   }
 }

@@ -1,3 +1,9 @@
+import { TPayment } from "../types";
+
+export function isPayment(value: string): value is TPayment {
+    return ['card', 'cash', ''].includes(value);
+}
+
 export function pascalToKebab(value: string): string {
     return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
 }
