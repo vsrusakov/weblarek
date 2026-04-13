@@ -200,3 +200,199 @@ type TPayment = 'card' | 'cash' | '';
 `getProductList(): Promise<IApiProductList>` - метод выполняет get-запрос на сервер для получения массива данных с товарами  
 
 `postBuyerData(data: IApiBuyerPostData): Promise<IApiPostResponseSuccess | IApiPostResponseError>` - метод для отправки данных покупателя на сервер. Выполняет post-запрос на сервер с помощью метода `post` класса `Api`. В запросе передаются поля `IBuyer`, стоимость корзины в поле `total` и массив идентификаторов товаров из корзины в поле `items`. При успешном запросе сервер вернет `id` заказа и его стоимость в поле `total`. При ошибке запроса сервер вернет объект `IApiPostResponseError` с описанием ошибки в поле `error` 
+
+### Слой представления
+#### Класс Header
+Используется для представления шапки сайта. Наследуется от класса `Component` с переменным типом `IHeaderData`
+
+```typescript
+interface IHeaderData {
+  counter: number;
+}
+```
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`basketButton: HTMLButtonElement` - элемент кнопки с иконкой корзины  
+`counterElement: HTMLElement` - элемент, содержащий число - количество товаров в корзине
+
+Методы:  
+`set counter(value: number)` - сеттер для установки количества товаров в `counterElement`
+
+#### Класс Gallery
+Используется для представления каталога карточек товаров на главной странице. Наследуется от класса `Component` с переменным типом `IGalleryData`
+
+```typescript
+interface IGalleryData {
+  catalog: HTMLElement[];
+}
+```
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`catalogElement: HTMLElement` - элемент разметки, содержащий каталог товаров  
+
+Методы:  
+`set catalog(items: HTMLElement[])` - сеттер для установки каталога товаров, получает массив элементов, содержащих разметку для карточки товара
+
+#### Класс Modal
+Используется для представления контента в модальных окнах. Разметка внутри модального окна - это самостоятельный компонент. Наследуется от класса `Component` с переменным типом `IModalData`
+
+```typescript
+interface IModalData {
+  content: HTMLElement;
+}
+```
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`closeButton: HTMLButtonElement` - кнопка для закрытия модального окна  
+`content: HTMLElement` - элемент, содержащий разметку другого компонента для отображения в модальном окне  
+
+#### Класс OrderSuccess
+Используется для представления элемента с информацией об успешном создании заказа. Наследуется от класса `Component` с переменным типом `IOrderSuccessData`
+
+```typescript
+interface IOrderSuccessData {
+  totalCost: number;
+}
+```
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`descriptionElement: HTMLElement` - элемент с описанием итоговой стоимости заказа  
+`closeButton: HTMLButtonElement` - кнопка для закрытия окна и возвращения на главный экран  
+
+Методы:  
+`set totalCost(value: number)` - сеттер для установки списанных средств в `descriptionElement`  
+
+
+#### Класс Card
+Абстрактный класс с описанием заголовка и цены в карточке товара. Соответствует типу `Pick<IProduct, 'title' | 'price'>`. Служит базовым классом для классов `GalleryCard`, `PreviewCard` и `BasketCard`. Принимает в качестве параметра тип `T`, который будет содержать дополнительные поля, необходимые для отображения компонента, например тип `Pick<IProduct, 'image' | 'category'>` для класса `GalleryCard`. Наследуется от класса `Component` с переменным типом `Pick<IProduct, 'title' | 'price'> | T`.
+
+Поля:  
+`titleElement: HTMLElement` - элемент, содержащий название товара в карточке  
+`priceElement: HTMLElement` - элемент, содержащий цену товара в карточке  
+
+Методы:  
+`set title(value: string)` - сеттер для установки названия товара в карточке  
+`set price(value: number | null)` - сеттер для установки цены товара  
+
+#### Класс GalleryCard
+Используется для представления элемента с карточкой товара на главном экране. Наследуется от класса `Card<Pick<IProduct, 'image' | 'category'>>`. 
+ 
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`imageElement: HTMLImageElement` - элемент изображения товара в карточке  
+`categoryElement: HTMLElement` - элемент, содержащий название категории товара  
+
+Методы:  
+`set image(value: string)` - сеттер для установки изображения товара в карточке  
+`set category(value: string)` - сеттер для установки категории товара в карточке  
+
+#### Класс PreviewCard
+Используется для представления элемента карточки с подробным описанием товара. Наследуется от класса `Card<Pick<IProduct, 'image' | 'category' | 'description'>>`.
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`imageElement: HTMLImageElement` - элемент изображения товара в карточке  
+`categoryElement: HTMLElement` - элемент, содержащий название категории товара  
+`descriptionElement: HTMLElement` - элемент с дополнительным описанием товара  
+`buyButton: HTMLButtonElement` - кнопка покупки товара, добавляет товар в корзину  
+
+Методы:  
+`set image(value: string)` - сеттер для установки изображения товара в карточке  
+`set category(value: string)` - сеттер для установки категории товара в карточке  
+`set description(value: string)` - сеттер для установки описания товара в карточке  
+
+#### Класс BasketCard
+Используется для представления товара в корзине. Наследуется от класса `Card<IIndexed>`.
+
+```typescript
+interface IIndexed {
+  index: number;
+}
+```
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`indexElement: HTMLElement` - элемент, содержащий порядковый номер товара в корзине   
+`deleteButton: HTMLButtonElement` - кнопка удаления товара из корзины  
+
+Методы:  
+`set index(value: number)` - сеттер для установки порядкового номера товара в корзине  
+
+#### Класс Basket
+Используется для представления корзины с товарами. Наследуется от класса `Component` с переменным типом `IBasketData`.
+
+```typescript
+interface IBasketData {
+  items: HTMLLIElement[];
+  totalPrice: number;
+}
+```
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`itemsListElement: HTMLUListElement` - элемент, содержащий список товаров, добавленных в корзину  
+`makeOrderButton: HTMLButtonElement` - кнопка оформления заказа  
+`totalPriceElement: HTMLUListElement` - элемент, содержащий стоимость товаров в корзине  
+
+Методы:  
+`set items(items: HTMLLIElement[])` - сеттер для установки списка товаров  
+`set totalPrice(value: number)` - сеттер для установки стоимости корзины  
+
+#### Класс Form
+Абстрактный класс представления формы. Служит базовым классом для классов представлений форм `OrderForm` и `ContactsForm`. Принимает в качестве параметра тип `T`, который будет содержать дополнительные поля, необходимые для отображения компонента. Наследуется от класса `Component` с переменным типом `IFormData`.
+
+```typescript
+interface IFormData {
+  errors?: string;
+}
+```
+
+Поля:  
+<!-- `formElement: HTMLFormElement` - элемент формы   -->
+`submitButton: HTMLButtonElement` - кнопка подтверждения формы  
+`errorsElement: HTMLElement` - элемент, содержащий описание ошибки после валидации формы  
+
+Методы:  
+`set errors(value: string)` - сеттер для установки сообщения об ошибке при заполнении полей формы  
+
+
+#### Класс OrderForm
+Используется для представления формы с деталями оплаты заказа. Наследуется от класса `Form`.
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`cardButton: HTMLButtonElement` - кнопка для выбора онлайн оплаты заказа  
+`cashButton: HTMLButtonElement` - кнопка для выбора оплаты при получении  
+`addressInput: HTMLInputElement` - поле ввода адреса доставки  
+
+
+#### Класс ContactsForm
+Используется для представления формы с контактными данными покупателя. НАследуется от класса `Form`.
+
+Конструктор:  
+`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+
+Поля:  
+`emailInput: HTMLInputElement` - поле ввода email-адреса покупателя   
+`phoneInput: HTMLInputElement` - поле ввода номера телефона покупателя  
