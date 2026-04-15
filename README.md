@@ -212,11 +212,12 @@ interface IHeaderData {
 ```
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, events: IEvents)` - принимает элемент html, за представление которого будет отвечать класс, и брокер событий для уведомления о действиях пользователя  
 
 Поля:  
 `basketButton: HTMLButtonElement` - элемент кнопки с иконкой корзины  
-`counterElement: HTMLElement` - элемент, содержащий число - количество товаров в корзине
+`counterElement: HTMLElement` - элемент, содержащий число - количество товаров в корзине  
+`events: IEvents` - брокер событий  
 
 Методы:  
 `set counter(value: number)` - сеттер для установки количества товаров в `counterElement`
@@ -249,11 +250,12 @@ interface IModalData {
 ```
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, events: IEvents)` - принимает элемент html, за представление которого будет отвечать класс, и брокер событий для уведомления о действиях пользователя  
 
 Поля:  
 `closeButton: HTMLButtonElement` - кнопка для закрытия модального окна  
 `content: HTMLElement` - элемент, содержащий разметку другого компонента для отображения в модальном окне  
+`events: IEvents` - брокер событий  
 
 #### Класс OrderSuccess
 Используется для представления элемента с информацией об успешном создании заказа. Наследуется от класса `Component` с переменным типом `IOrderSuccessData`
@@ -264,11 +266,12 @@ interface IOrderSuccessData {
 }
 ```
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, events: IEvents)` - принимает элемент html, за представление которого будет отвечать класс, и брокер событий для уведомления о действиях пользователя  
 
 Поля:  
 `descriptionElement: HTMLElement` - элемент с описанием итоговой стоимости заказа  
 `closeButton: HTMLButtonElement` - кнопка для закрытия окна и возвращения на главный экран  
+`events: IEvents` - брокер событий  
 
 Методы:  
 `set totalCost(value: number)` - сеттер для установки списанных средств в `descriptionElement`  
@@ -289,7 +292,7 @@ interface IOrderSuccessData {
 Используется для представления элемента с карточкой товара на главном экране. Наследуется от класса `Card<Pick<IProduct, 'image' | 'category'>>`. 
  
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, actions: ICardActions)` - принимает элемент html, за представление которого будет отвечать класс, и обработчики событий для карточки  
 
 Поля:  
 `imageElement: HTMLImageElement` - элемент изображения товара в карточке  
@@ -303,7 +306,7 @@ interface IOrderSuccessData {
 Используется для представления элемента карточки с подробным описанием товара. Наследуется от класса `Card<Pick<IProduct, 'image' | 'category' | 'description'>>`.
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, actions: ICardActions)` - принимает элемент html, за представление которого будет отвечать класс, и обработчики событий для карточки  
 
 Поля:  
 `imageElement: HTMLImageElement` - элемент изображения товара в карточке  
@@ -326,7 +329,7 @@ interface IIndexed {
 ```
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, actions: ICardActions)` - принимает элемент html, за представление которого будет отвечать класс, и обработчики событий для карточки  
 
 Поля:  
 `indexElement: HTMLElement` - элемент, содержащий порядковый номер товара в корзине   
@@ -346,7 +349,7 @@ interface IBasketData {
 ```
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, events: IEvents)` - принимает элемент html, за представление которого будет отвечать класс, и брокер событий для уведомления о действиях пользователя  
 
 Поля:  
 `itemsListElement: HTMLUListElement` - элемент, содержащий список товаров, добавленных в корзину  
@@ -358,7 +361,7 @@ interface IBasketData {
 `set totalPrice(value: number)` - сеттер для установки стоимости корзины  
 
 #### Класс Form
-Абстрактный класс представления формы. Служит базовым классом для классов представлений форм `OrderForm` и `ContactsForm`. Принимает в качестве параметра тип `T`, который будет содержать дополнительные поля, необходимые для отображения компонента. Наследуется от класса `Component` с переменным типом `IFormData`.
+Абстрактный класс представления формы. Служит базовым классом для классов представлений форм `OrderForm` и `ContactsForm`. Наследуется от класса `Component` с переменным типом `IFormData`.
 
 ```typescript
 interface IFormData {
@@ -379,7 +382,7 @@ interface IFormData {
 Используется для представления формы с деталями оплаты заказа. Наследуется от класса `Form`.
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, actions: IFormActions)` - принимает элемент html, за представление которого будет отвечать класс, и обработчики действий с формой  
 
 Поля:  
 `cardButton: HTMLButtonElement` - кнопка для выбора онлайн оплаты заказа  
@@ -388,10 +391,10 @@ interface IFormData {
 
 
 #### Класс ContactsForm
-Используется для представления формы с контактными данными покупателя. НАследуется от класса `Form`.
+Используется для представления формы с контактными данными покупателя. Наследуется от класса `Form`.
 
 Конструктор:  
-`constructor(container: HTMLElement)` - принимает элемент html, за представление которого будет отвечать класс  
+`constructor(container: HTMLElement, actions: IFormActions)` - принимает элемент html, за представление которого будет отвечать класс, и обработчики действий с формой  
 
 Поля:  
 `emailInput: HTMLInputElement` - поле ввода email-адреса покупателя   
