@@ -23,6 +23,7 @@ export class ProductCatalog {
    */
   constructor(items: IProduct[], protected events: IEvents) {
     this._items = items;
+    this.events.emit("gallery:initialized");
   }
 
   /**
