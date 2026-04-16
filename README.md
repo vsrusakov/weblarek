@@ -370,7 +370,7 @@ interface IFormData {
 ```
 
 Поля:  
-<!-- `formElement: HTMLFormElement` - элемент формы   -->
+`formElement: HTMLFormElement` - элемент формы  
 `submitButton: HTMLButtonElement` - кнопка подтверждения формы  
 `errorsElement: HTMLElement` - элемент, содержащий описание ошибки после валидации формы  
 
@@ -410,3 +410,6 @@ interface IFormData {
 
 #### orderSuccess:close
 Событие о закрытии окна с подстверждением заказа
+
+#### basket:makeOrder
+Событие, при котором пользователь нажал кнопку оформления заказа в корзине
