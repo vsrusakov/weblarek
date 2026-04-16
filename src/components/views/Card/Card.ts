@@ -2,14 +2,18 @@ import { Component } from "../../base/Component.ts";
 import { IProduct } from "../../../types/index.ts";
 import { ensureElement } from '../../../utils/utils.ts';
 
-type TCard = Pick<IProduct, "title" | "price">; //& Partial<Pick<IProduct, 'image' | 'category' | 'description'>>;
+type TCard = Pick<IProduct, "title" | "price">;
+
+export interface IIndexed {
+  index: number;
+}
 
 export interface ICardActions {
   onClick: (event: MouseEvent) => void;
 }
 
 export abstract class Card<
-  T extends Partial<Pick<IProduct, "image" | "category" | "description">>,
+  T extends Partial<Pick<IProduct, "image" | "category" | "description">> | IIndexed,
 > extends Component<TCard & T> {
   protected titleElement = ensureElement<HTMLElement>('.card__title', this.container);
   protected priceElement = ensureElement<HTMLElement>('.card__price', this.container);
