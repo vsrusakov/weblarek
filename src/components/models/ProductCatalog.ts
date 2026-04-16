@@ -1,4 +1,5 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
 /**
  * Класс для хранения товаров, доступных в магазине, и товара, который по клику выбрал пользователь для подробного отображения
@@ -20,7 +21,7 @@ export class ProductCatalog {
    * Создает экземпляр каталога товаров на главной странице.
    * @param items - массив товаров
    */
-  constructor(items: IProduct[]) {
+  constructor(items: IProduct[], protected events: IEvents) {
     this._items = items;
   }
 
@@ -34,11 +35,12 @@ export class ProductCatalog {
   /**
    * Товар, выбранный пользователем (опционально).
    */
-  get selectedItem(): IProduct | undefined{
+  get selectedItem(): IProduct | undefined {
     return this._selectedItem;
   }
 
   set selectedItem(value: IProduct) {
     this._selectedItem = value;
+    this.events.emit("gallery:itemSelected");
   }
 }

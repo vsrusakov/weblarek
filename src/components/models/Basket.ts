@@ -1,7 +1,8 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
 /**
- * Класс для управления корзиной товаров полязователя.
+ * Класс для управления корзиной товаров пользователя.
  */
 export class Basket {
   /**
@@ -10,12 +11,15 @@ export class Basket {
    */
   private _items: IProduct[] = [];
 
+  constructor(protected events: IEvents) {}
+
   /**
    * Метод для добавления нового товара в корзину
    * @param value - новый товар
    */
   add(value: IProduct) {
     this._items.push(value);
+    this.events.emit('basket:changed');
   }
 
   /**
@@ -24,6 +28,7 @@ export class Basket {
    */
   delete(id: string) {
     this._items = this._items.filter(item => item.id !== id);
+    this.events.emit('basket:changed');
   }
 
   /**

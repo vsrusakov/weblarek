@@ -1,5 +1,6 @@
 import { IBuyer, TPayment } from "../../types";
 import { isPayment } from "../../utils/utils";
+import { IEvents } from "../base/Events";
 
 /**
  * Класс для хранения и валидации данных покупателя
@@ -9,6 +10,8 @@ export class Buyer {
   private address: string = '';
   private email: string = '';
   private phone: string = '';
+
+  constructor(protected events: IEvents) {}
 
   /**
    * Сохранение данных покупателя
@@ -32,6 +35,7 @@ export class Buyer {
         default:
       }
     }
+    this.events.emit('buyer:dataChanged');
   }
 
   /**
@@ -55,6 +59,7 @@ export class Buyer {
     this.address = '';
     this.email = '';
     this.phone = '';
+    this.events.emit('buyer:dataChanged');
   }
 
   /**
