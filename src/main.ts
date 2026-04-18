@@ -20,6 +20,7 @@ import { PreviewCard } from './components/views/Card/PreviewCard.ts'
 import { BasketCard } from './components/views/Card/BasketCard.ts'
 import { OrderForm } from './components/views/Form/OrderForm.ts'
 import { ContactsForm } from './components/views/Form/ContactsForm.ts'
+import { IFormChangeData } from './components/views/Form/Form.ts';
 
 
 
@@ -81,11 +82,10 @@ eventEmitter.on('gallery:itemSelected', (item: IProduct) => {
 eventEmitter.on('previewCard:buy', (item: IProduct) => {
   if (basketModel.has(item.id)) {
     basketModel.delete(item.id);
-    previewCardView.render({ buttonText: 'buy' });
-    return;
+  } else {
+    basketModel.add(item);
   }
-  basketModel.add(item);
-  previewCardView.render({ buttonText: 'remove' });
+  modalView.hide();
 });
 
 eventEmitter.on('modal:close', () => {
@@ -124,6 +124,18 @@ eventEmitter.on('basket:itemDeleted', (item: IProduct) => {
 eventEmitter.on('basket:makeOrder', () => {
   const orderForm = orderFormView.render();
   modalView.render({content: orderForm});
+});
+
+eventEmitter.on('form:change', (data: IFormChangeData) => {
+    let errorMessage = data.validateFunc();
+    // debugger;
+    if (errorMessage) {
+      data.formView.render({ errors: errorMessage });
+      data.submitButton.disabled = true;
+    } else {
+      data.formView.render({ errors: '' });
+      data.submitButton.disabled = false;
+    }
 });
 
 eventEmitter.on('orderForm:submit', (data: { formElement: HTMLFormElement, orderButtons: HTMLButtonElement[] }) => {
