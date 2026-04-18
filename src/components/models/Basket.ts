@@ -62,4 +62,12 @@ export class Basket {
   has(id: string): boolean {
     return this._items.some(item => item.id === id)
   }
+
+  /**
+   * Метод для удаления всех товаров из корзины
+   */
+  clearData() {
+    this._items = [];
+    this.events.emit('basket:changed');
+  }
 }
