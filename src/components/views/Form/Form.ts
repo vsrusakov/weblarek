@@ -14,16 +14,14 @@ export abstract class Form extends Component<IFormData> {
   protected submitButton: HTMLButtonElement;
   protected errorsElement: HTMLElement;
 
-  constructor(protected container: HTMLElement, actions: IFormActions) {
+  constructor(protected container: HTMLElement) {
     super(container);
 
-    this.formElement = ensureElement<HTMLFormElement>('form', this.container);
+    this.formElement = this.container as HTMLFormElement;
     this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
     this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
 
-    if (actions.submit) {
-      this.formElement.addEventListener('submit', actions.submit);
-    }
+    this.submitButton.disabled = false;
   }
 
   set errors(value: string) {

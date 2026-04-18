@@ -1,5 +1,4 @@
 import { Component } from '../base/Component.ts';
-import { ensureElement } from '../../utils/utils.ts';
 
 interface IGalleryData {
   catalog: HTMLElement[];
@@ -10,8 +9,7 @@ export class Gallery extends Component<IGalleryData> {
 
   constructor(container: HTMLElement) {
     super(container);
-
-    this.catalogElement = ensureElement<HTMLElement>('.gallery', this.container);
+    this.catalogElement = this.container;
   }
 
   set catalog(items: HTMLElement[]) {

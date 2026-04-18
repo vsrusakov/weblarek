@@ -1,8 +1,8 @@
-import { Card, ICardActions, IIndexed } from './Card'
+import { Card, ICardActions, IRenderData } from './Card'
 import { ensureElement } from '../../../utils/utils.ts';
 
 
-export class BasketCard extends Card<IIndexed> {
+export class BasketCard extends Card<IRenderData> {
   protected indexElement: HTMLElement;
   protected deleteButton: HTMLButtonElement;
 

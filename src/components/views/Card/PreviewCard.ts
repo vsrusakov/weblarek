@@ -1,9 +1,10 @@
-import { Card, ICardActions } from './Card'
-import { ensureElement } from '../../../utils/utils.ts';
+import { Card, ICardActions, IRenderData } from './Card'
+import { ensureElement, isPriceless } from '../../../utils/utils.ts';
 import { categoryMap } from '../../../utils/constants.ts';
 import { IProduct } from '../../../types/index.ts';
 
-type TPreviewCard = Pick<IProduct, "image" | "category" | "description">;
+type TPreviewCard = Pick<IProduct, "image" | "category" | "description"> & IRenderData;
+type TButtonText = 'buy' | 'remove';
 
 export class PreviewCard extends Card<TPreviewCard> {
   protected imageElement: HTMLImageElement;
@@ -41,5 +42,19 @@ export class PreviewCard extends Card<TPreviewCard> {
 
   set description(description: string) {
     this.descriptionElement.textContent = description;
+  }
+
+  set buttonText(text: TButtonText) {
+    this.buyButton.textContent = text === 'buy' ? 'Купить' : 'Удалить из корзины';
+  }
+
+  render(data?: Partial<TPreviewCard>): HTMLElement {
+    super.render(data);
+
+    if (isPriceless(this.priceElement.textContent)) {
+      this.buyButton.textContent = 'Недоступно';
+      this.buyButton.disabled = true;
+    }
+    return this.container;
   }
 }

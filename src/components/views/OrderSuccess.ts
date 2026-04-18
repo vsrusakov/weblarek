@@ -20,4 +20,8 @@ export class OrderSuccess extends Component<IOrderSuccessData> {
       this.events.emit('orderSuccess:close');
     });
   }
+
+  set totalCost(value: number) {
+    this.descriptionElement.textContent = `Списано ${value} синапсов`;
+  }
 }

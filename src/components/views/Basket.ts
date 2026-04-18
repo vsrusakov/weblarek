@@ -29,6 +29,12 @@ export class Basket extends Component<IBasketData> {
   }
 
   set totalPrice(price: string) {
-    this.totalPriceElement.textContent = price;
+    this.totalPriceElement.textContent = `${price} синапсов`;
+  }
+
+  render(data?: Partial<IBasketData>): HTMLElement {
+    super.render(data);
+    this.makeOrderButton.disabled = this.itemsListElement.children.length === 0;
+    return this.container;
   }
 }
