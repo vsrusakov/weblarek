@@ -1,228 +1,191 @@
+import './scss/styles.scss';
 import { ApiService } from './components/ApiService';
 import { Api } from './components/base/Api';
-import './scss/styles.scss';
-import { IApiBuyerPostData } from './types';
-import { API_URL } from './utils/constants';
-import { Basket } from './components/models/Basket.ts';
+import { EventEmitter } from './components/base/Events';
+import { IProduct } from './types';
+import { API_URL, CDN_URL } from './utils/constants';
+import { cloneTemplate, ensureElement } from './utils/utils.ts';
+
+import { Basket as BasketModel } from './components/models/Basket.ts';
 import { ProductCatalog } from './components/models/ProductCatalog.ts';
 import { Buyer } from './components/models/Buyer.ts';
-import './scss/styles.scss';
 
-/**
- * создание экземпляра ApiService и проверка методов работы с сервером
- */
+import { Header } from './components/views/Header.ts'
+import { Gallery } from './components/views/Gallery.ts'
+import { Modal } from './components/views/Modal.ts'
+import { Basket } from './components/views/Basket.ts'
+import { OrderSuccess } from './components/views/OrderSuccess.ts'
+import { GalleryCard } from './components/views/Card/GalleryCard.ts'
+import { PreviewCard } from './components/views/Card/PreviewCard.ts'
+import { BasketCard } from './components/views/Card/BasketCard.ts'
+import { OrderForm } from './components/views/Form/OrderForm.ts'
+import { ContactsForm } from './components/views/Form/ContactsForm.ts'
 
-const api = new Api(API_URL);
 
-const apiService = new ApiService(api);
+
+const eventEmitter = new EventEmitter();
 
 // получение данных о товарах от сервера
-console.log('получение данных о товарах от сервера');
-
+const api = new Api(API_URL);
+const apiService = new ApiService(api);
 const products = await apiService.getProductList();
 
-products.items.forEach(item => {
-  console.log(item.id, item.image);
-})
+// инициализация моделей
+const catalogModel = new ProductCatalog(eventEmitter);
+const buyerModel = new Buyer(eventEmitter);
+const basketModel = new BasketModel(eventEmitter);
 
-// тест отправки корректных данных на сервер
-console.log('тест отправки корректных данных на сервер');
+// инициализация views
+const headerView = new Header(ensureElement<HTMLElement>('.header'), eventEmitter);
+const galleryView = new Gallery(ensureElement<HTMLElement>('.gallery'));
+const modalView = new Modal(ensureElement<HTMLElement>('#modal-container'), eventEmitter);
+const basketView = new Basket(cloneTemplate('#basket'), eventEmitter);
+const orderSuccessView = new OrderSuccess(cloneTemplate('#success'), eventEmitter);
+const orderFormView = new OrderForm(cloneTemplate('#order'), eventEmitter);
+const contactsFormView = new ContactsForm(cloneTemplate('#contacts'), eventEmitter);
+let previewCardView: PreviewCard;
 
-const buyerDataCorrect: IApiBuyerPostData = {
-    "payment": "cash",
-    "email": "test@test.ru",
-    "phone": "+71234567890",
-    "address": "Spb Vosstania 1",
-    "total": 2200,
-    "items": [
-        "854cef69-976d-4c2a-a18c-2aa45046c390",
-        "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
-    ]
-}
+// Презентер 
 
-try {
-  const postResp = await apiService.postBuyerData(buyerDataCorrect);
-  console.log(postResp)
-} catch (error) {
-  console.log(error)
-}
+eventEmitter.on('gallery:initialized', () => {
+  const cards = catalogModel.items.map(item => {
 
-// тест отправки некорректного id товара на сервер
-console.log('тест отправки некорректного id товара на сервер');
+    const onClick = (event: MouseEvent) => {
+      event.stopPropagation();
+      eventEmitter.emit('gallery:itemSelected', item);
+    };
 
-const buyerDataItemIdIncorrect: IApiBuyerPostData = {
-    "payment": "cash",
-    "email": "test@test.ru",
-    "phone": "+71234567890",
-    "address": "Spb Vosstania 1",
-    "total": 2200,
-    "items": [
-        "854cef69-976d-4c2a-a18c-2aa45046c390",
-        "c101ab44-ed99-4a54-990d-47aa2bb4e7d"
-    ]
-}
+    const card = new GalleryCard(cloneTemplate('#card-catalog'), { onClick });
+    item.image = `${CDN_URL}/${item.image}`;
+    return card.render(item);
+  });
 
-try {
-  const postResp = await apiService.postBuyerData(buyerDataItemIdIncorrect);
-  console.log(postResp)
-} catch (error) {
-  console.log(error)
-}
+  galleryView.render({catalog: cards});
+});
 
-// тест отправки некорректного суммы заказа на сервер
-console.log('тест отправки некорректного суммы заказа на сервер');
+eventEmitter.on('gallery:itemSelected', (item: IProduct) => {
+ 
+  const onClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    eventEmitter.emit('previewCard:buy', item);
+  }
+  previewCardView = new PreviewCard(cloneTemplate('#card-preview'), { onClick });
 
-const buyerDataTotalIncorrect: IApiBuyerPostData = {
-    "payment": "cash",
-    "email": "test@test.ru",
-    "phone": "+71234567890",
-    "address": "Spb Vosstania 1",
-    "total": 1200,
-    "items": [
-        "854cef69-976d-4c2a-a18c-2aa45046c390",
-        "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
-    ]
-}
+  const buttonText = basketModel.has(item.id) ? 'remove' : 'buy';
+  const card = previewCardView.render({ ...item, buttonText });
 
-try {
-  const postResp = await apiService.postBuyerData(buyerDataTotalIncorrect);
-  console.log(postResp)
-} catch (error) {
-  console.log(error)
-}
+  modalView.render({content: card});
+  modalView.open();
+});
 
-// тест отправки некорректного адреса заказа на сервер
-console.log('тест отправки некорректного адреса заказа на сервер');
+eventEmitter.on('previewCard:buy', (item: IProduct) => {
+  if (basketModel.has(item.id)) {
+    basketModel.delete(item.id);
+    previewCardView.render({ buttonText: 'buy' });
+    return;
+  }
+  basketModel.add(item);
+  previewCardView.render({ buttonText: 'remove' });
+});
 
-const buyerDataAddressIncorrect: IApiBuyerPostData = {
-    "payment": "cash",
-    "email": "test@test.ru",
-    "phone": "+71234567890",
-    "address": "",
-    "total": 2200,
-    "items": [
-        "854cef69-976d-4c2a-a18c-2aa45046c390",
-        "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
-    ]
-}
+eventEmitter.on('modal:close', () => {
+  modalView.hide();
+});
 
-try {
-  const postResp = await apiService.postBuyerData(buyerDataAddressIncorrect);
-  console.log(postResp)
-} catch (error) {
-  console.log(error)
-}
+eventEmitter.on('basket:open', () => {
+  const basketContent = basketView.render();
+  modalView.render({content: basketContent});
+  modalView.open();
+});
 
+eventEmitter.on('basket:changed', () => {
+  headerView.render({counter: basketModel.size});
 
-/**
- * тест моделей данных
- */
+  const basketItems = basketModel.items.map((item, index) => {
+    const onClick = (event: MouseEvent) => {
+      event.stopPropagation();
+      eventEmitter.emit('basket:itemDeleted', item);
+    };
 
-// создание экземпляра productsModel и вывод id товаров в консоль
-console.log('создание экземпляра productsModel и вывод id товаров в консоль');
+    const card = new BasketCard(cloneTemplate('#card-basket'), { onClick });
+    return card.render({ ...item, index: index + 1 }) as HTMLLIElement;
+  });
 
-const productsModel = new ProductCatalog(products.items);
+  basketView.render({
+    items: basketItems,
+    totalPrice: basketModel.getTotalCost()
+  });
+});
 
-productsModel.items.forEach(item => {
-  console.log(`Товар из каталога: ${item.id}`);
-})
+eventEmitter.on('basket:itemDeleted', (item: IProduct) => {
+  basketModel.delete(item.id);
+});
 
-// проверка работы поля selectedItem
-console.log('проверка работы поля selectedItem');
+eventEmitter.on('basket:makeOrder', () => {
+  const orderForm = orderFormView.render();
+  modalView.render({content: orderForm});
+});
 
-console.log(`selectedItem до выбора: ${productsModel.selectedItem}`);
+eventEmitter.on('orderForm:submit', (data: { formElement: HTMLFormElement, orderButtons: HTMLButtonElement[] }) => {
+  const formData = new FormData(data.formElement);
+  const paymentButton = data.orderButtons.find(btn => btn.classList.contains('button_alt-active'));
+  
+  const buyerData = {
+    payment: paymentButton ? paymentButton.name : '',
+    address: formData.get('address') as string,
+  }
+  buyerModel.saveData(buyerData);
+  const errors = buyerModel.validateData();
+  const errorMessage = errors?.payment || errors?.address || '';
 
-productsModel.selectedItem = products.items[0];
+  if (errorMessage) {
+    orderFormView.render({ errors: errorMessage });
+    return;
+  }
 
-console.log(`selectedItem после выбора: ${productsModel.selectedItem.id}`);
+  orderFormView.reset();
+  const contactsForm = contactsFormView.render();
+  modalView.render({content: contactsForm});
+});
 
-// создание экземпляра корзины Basket. тест методов Basket
-console.log('создание экземпляра корзины Basket. тест методов Basket');
+eventEmitter.on('contactsForm:submit', async (formElement: HTMLFormElement) => {
+  const formData = new FormData(formElement);
 
-const basket = new Basket();
+  const buyerData = {
+    email: formData.get('email') as string,
+    phone: formData.get('phone') as string,
+  }
+  buyerModel.saveData(buyerData);
+  const errors = buyerModel.validateData();
+  const errorMessage = errors?.email || errors?.phone || '';
 
-console.log(`пустая корзина: ${basket.items}`);
+  if (errorMessage) {
+    contactsFormView.render({ errors: errorMessage });
+    return;
+  }
 
-basket.add(products.items[1]);
-basket.add(products.items[2]);
+  const response = await apiService.postBuyerData({
+    ...buyerModel.getData(),
+    total: basketModel.getTotalCost(),
+    items: basketModel.items.map(item => item.id)
+  });
 
-console.log(`непустая корзина: ${basket.items}`);
-basket.items.forEach(item => {
-  console.log(`Товар из корзины: ${item.id}`);
-})
+  if ('error' in response) {
+    contactsFormView.render({ errors: 'Ошибка создания заказа' });
+    console.error('Ошибка создания заказа', response.error);
+    return;
+  }
+  contactsFormView.reset();
 
-basket.delete(products.items[3].id);
-basket.delete(products.items[2].id);
+  const orderSuccessWindow = orderSuccessView.render({ totalCost: response.total });
+  modalView.render({content: orderSuccessWindow});
 
-console.log(`непустая корзина: ${basket.items}`);
-basket.items.forEach(item => {
-  console.log(`Товар из корзины: ${item.id}`);
-})
+  basketModel.clearData();
+  buyerModel.clearData();
+});
 
-basket.add(products.items[0]);
-basket.add(products.items[2]);
-basket.add(products.items[3]);
-basket.add(products.items[4]);
-basket.add(products.items[5]);
+eventEmitter.on('orderSuccess:close', () => {
+  modalView.hide();
+});
 
-console.log(`Товар из корзины: ${products.items[5]}`);
-
-console.log(`цена корзины: ${basket.getTotalCost()}`);
-
-basket.delete(products.items[3].id);
-
-console.log(`наличие товара (существующего): ${basket.has(products.items[0].id)}`);
-console.log(`наличие товара (существующего): ${basket.has(products.items[1].id)}`);
-console.log(`наличие товара (существующего): ${basket.has(products.items[2].id)}`);
-console.log(`наличие товара (несуществующего): ${basket.has(products.items[3].id)}`);
-console.log(`наличие товара (несуществующего): ${basket.has('')}`);
-console.log(`наличие товара (несуществующего): ${basket.has('abc')}`);
-
-// создание экземпляра Buyer и тест его методов
-console.log('создание экземпляра Buyer и тест его методов');
-
-const buyer = new Buyer();
-
-console.log(`покупатель без данных: ${Object.entries(buyer.getData())}`);
-
-buyer.clearData();
-
-console.log(`покупатель без данных после очистки данных: ${Object.entries(buyer.getData())}`);
-
-console.log(`валидация покупателя без данных: ${Object.entries(buyer.validateData())}`);
-
-buyer.saveData({'payment': 'cash'});
-
-console.log(`покупатель с данными payment: ${Object.entries(buyer.getData())}`);
-
-console.log(`валидация покупателя с данными payment: ${Object.entries(buyer.validateData())}`);
-
-buyer.saveData({'address': '5 ave, NY'});
-
-console.log(`покупатель с данными payment, address: ${Object.entries(buyer.getData())}`);
-
-console.log(`валидация покупателя с данными payment, address: ${Object.entries(buyer.validateData())}`);
-
-buyer.saveData({'email': 'a@a.a'});
-
-console.log(`покупатель с данными payment, address, email: ${Object.entries(buyer.getData())}`);
-
-console.log(`валидация покупателя с данными payment, address, email: ${Object.entries(buyer.validateData())}`);
-
-buyer.saveData({'phone': '123'});
-
-console.log(`покупатель с данными payment, address, email, phone: ${Object.entries(buyer.getData())}`);
-
-console.log(`валидация покупателя с данными payment, address, email, phone: ${Object.entries(buyer.validateData())}`);
-
-buyer.clearData();
-
-console.log(`покупатель после очистки данных: ${Object.entries(buyer.getData())}`);
-
-buyer.saveData({'payment': 'card'});
-buyer.saveData({'address': '5 ave, NY'});
-buyer.saveData({'email': 'a@a.a'});
-buyer.saveData({'phone': '123'});
-
-// console.log('обращение к полям класса:');
-// console.log(buyer.payment, buyer.address , buyer.email , buyer.phone);
+catalogModel.items = products.items;
