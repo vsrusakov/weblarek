@@ -8,6 +8,14 @@ export function isPriceless(value: unknown): value is TPriceless {
     return value === 'Бесценно';
 }
 
+export function isPaymentChosen(buttons: HTMLButtonElement[]): boolean {
+    return buttons.some(btn => btn.classList.contains('button_alt-active'));
+}
+
+export function isInputFilled(input: HTMLInputElement): boolean {
+    return input.value.trim() !== '';
+}
+
 export function pascalToKebab(value: string): string {
     return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
 }
