@@ -1,7 +1,11 @@
-import { TPayment } from "../types";
+import { TPayment, TPriceless } from "../types";
 
 export function isPayment(value: string): value is TPayment {
     return ['card', 'cash', ''].includes(value);
+}
+
+export function isPriceless(value: unknown): value is TPriceless {
+    return value === 'Бесценно';
 }
 
 export function pascalToKebab(value: string): string {
