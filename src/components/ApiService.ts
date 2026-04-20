@@ -42,7 +42,7 @@ export class ApiService {
    */
   async getProductList(): Promise<IApiProductList> {
     let products = await this.api.get<IApiProductList>(this.productUri);
-    return products || [];
+    return products;
   }
 
   /**
