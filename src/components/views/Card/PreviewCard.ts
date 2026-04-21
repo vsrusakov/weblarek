@@ -1,7 +1,8 @@
-import { Card, ICardActions, IRenderData } from './Card'
+import { Card, IRenderData } from './Card'
 import { ensureElement, isPriceless } from '../../../utils/utils.ts';
 import { categoryMap } from '../../../utils/constants.ts';
 import { IProduct } from '../../../types/index.ts';
+import { IEvents } from '../../base/Events.ts';
 
 type TPreviewCard = Pick<IProduct, "image" | "category" | "description"> & IRenderData;
 type TButtonText = 'buy' | 'remove';
@@ -12,7 +13,7 @@ export class PreviewCard extends Card<TPreviewCard> {
   protected descriptionElement: HTMLElement;
   protected buyButton: HTMLButtonElement;
 
-  constructor(protected container: HTMLElement, actions?: ICardActions) {
+  constructor(protected container: HTMLElement, protected events: IEvents) {
     super(container);
 
     this.imageElement = ensureElement<HTMLImageElement>('.card__image', this.container);
@@ -20,9 +21,10 @@ export class PreviewCard extends Card<TPreviewCard> {
     this.descriptionElement = ensureElement<HTMLElement>('.card__text', this.container);
     this.buyButton = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
-    if (actions?.onClick) {
-      this.buyButton.addEventListener('click', actions.onClick);
-    }
+    this.buyButton.addEventListener('click', () => {
+      this.events.emit('previewCard:buy');
+    });
+
   }
 
   set image(src: string) {
