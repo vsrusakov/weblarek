@@ -35,7 +35,7 @@ export class Buyer {
         default:
       }
     }
-    this.events.emit('buyer:dataChanged');
+    this.events.emit('buyer:dataChanged', data);
   }
 
   /**
@@ -59,7 +59,6 @@ export class Buyer {
     this.address = '';
     this.email = '';
     this.phone = '';
-    this.events.emit('buyer:dataChanged');
   }
 
   /**
