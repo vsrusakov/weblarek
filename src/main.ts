@@ -2,7 +2,7 @@ import './scss/styles.scss';
 import { ApiService } from './components/ApiService';
 import { Api } from './components/base/Api';
 import { EventEmitter } from './components/base/Events';
-import { IProduct } from './types';
+import { IBuyer, IProduct, TPayment } from './types';
 import { API_URL, CDN_URL } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils.ts';
 
@@ -20,7 +20,7 @@ import { PreviewCard } from './components/views/Card/PreviewCard.ts'
 import { BasketCard } from './components/views/Card/BasketCard.ts'
 import { OrderForm } from './components/views/Form/OrderForm.ts'
 import { ContactsForm } from './components/views/Form/ContactsForm.ts'
-import { IFormChangeData } from './components/views/Form/Form.ts';
+import { Form } from './components/views/Form/Form.ts';
 
 
 
@@ -29,7 +29,6 @@ const eventEmitter = new EventEmitter();
 // получение данных о товарах от сервера
 const api = new Api(API_URL);
 const apiService = new ApiService(api);
-const products = await apiService.getProductList();
 
 // инициализация моделей
 const catalogModel = new ProductCatalog(eventEmitter);
@@ -44,7 +43,7 @@ const basketView = new Basket(cloneTemplate('#basket'), eventEmitter);
 const orderSuccessView = new OrderSuccess(cloneTemplate('#success'), eventEmitter);
 const orderFormView = new OrderForm(cloneTemplate('#order'), eventEmitter);
 const contactsFormView = new ContactsForm(cloneTemplate('#contacts'), eventEmitter);
-let previewCardView: PreviewCard;
+const previewCardView = new PreviewCard(cloneTemplate('#card-preview'), eventEmitter);
 
 // Презентер 
 
@@ -53,7 +52,7 @@ eventEmitter.on('gallery:initialized', () => {
 
     const onClick = (event: MouseEvent) => {
       event.stopPropagation();
-      eventEmitter.emit('gallery:itemSelected', item);
+      eventEmitter.emit('galleryCard:selected', item);
     };
 
     const card = new GalleryCard(cloneTemplate('#card-catalog'), { onClick });
@@ -64,28 +63,34 @@ eventEmitter.on('gallery:initialized', () => {
   galleryView.render({catalog: cards});
 });
 
-eventEmitter.on('gallery:itemSelected', (item: IProduct) => {
- 
-  const onClick = (event: MouseEvent) => {
-    event.stopPropagation();
-    eventEmitter.emit('previewCard:buy', item);
+eventEmitter.on('gallery:itemSelected', () => {
+  const selectedItem = catalogModel.selectedItem;
+
+  if (selectedItem) {
+    const buttonText = basketModel.has(selectedItem.id) ? 'remove' : 'buy';
+    const card = previewCardView.render({ ...selectedItem, buttonText });
+
+    modalView.render({content: card});
+    modalView.open();
   }
-  previewCardView = new PreviewCard(cloneTemplate('#card-preview'), { onClick });
-
-  const buttonText = basketModel.has(item.id) ? 'remove' : 'buy';
-  const card = previewCardView.render({ ...item, buttonText });
-
-  modalView.render({content: card});
-  modalView.open();
 });
 
-eventEmitter.on('previewCard:buy', (item: IProduct) => {
-  if (basketModel.has(item.id)) {
-    basketModel.delete(item.id);
-  } else {
-    basketModel.add(item);
+eventEmitter.on('galleryCard:selected', (item: IProduct) => {
+  catalogModel.selectedItem = item;
+});
+
+eventEmitter.on('previewCard:buy', () => {
+
+  const selectedItem = catalogModel.selectedItem;
+  
+  if (selectedItem) {
+    if (basketModel.has(selectedItem.id)) {
+      basketModel.delete(selectedItem.id);
+    } else {
+      basketModel.add(selectedItem);
+    }
+    modalView.hide();
   }
-  modalView.hide();
 });
 
 eventEmitter.on('modal:close', () => {
@@ -122,33 +127,17 @@ eventEmitter.on('basket:itemDeleted', (item: IProduct) => {
 });
 
 eventEmitter.on('basket:makeOrder', () => {
+  orderFormView.reset();
+  contactsFormView.reset();
+
   const orderForm = orderFormView.render();
   modalView.render({content: orderForm});
 });
 
-eventEmitter.on('form:change', (data: IFormChangeData) => {
-    let errorMessage = data.validateFunc();
-    // debugger;
-    if (errorMessage) {
-      data.formView.render({ errors: errorMessage });
-      data.submitButton.disabled = true;
-    } else {
-      data.formView.render({ errors: '' });
-      data.submitButton.disabled = false;
-    }
-});
+eventEmitter.on('orderForm:submit', () => {
 
-eventEmitter.on('orderForm:submit', (data: { formElement: HTMLFormElement, orderButtons: HTMLButtonElement[] }) => {
-  const formData = new FormData(data.formElement);
-  const paymentButton = data.orderButtons.find(btn => btn.classList.contains('button_alt-active'));
-  
-  const buyerData = {
-    payment: paymentButton ? paymentButton.name : '',
-    address: formData.get('address') as string,
-  }
-  buyerModel.saveData(buyerData);
   const errors = buyerModel.validateData();
-  const errorMessage = errors?.payment || errors?.address || '';
+  const errorMessage = errors.payment || errors.address || '';
 
   if (errorMessage) {
     orderFormView.render({ errors: errorMessage });
@@ -160,44 +149,74 @@ eventEmitter.on('orderForm:submit', (data: { formElement: HTMLFormElement, order
   modalView.render({content: contactsForm});
 });
 
-eventEmitter.on('contactsForm:submit', async (formElement: HTMLFormElement) => {
-  const formData = new FormData(formElement);
+eventEmitter.on('form:changed', (data: {payment: string}) => {
+  buyerModel.saveData(data);
+});
 
-  const buyerData = {
-    email: formData.get('email') as string,
-    phone: formData.get('phone') as string,
-  }
-  buyerModel.saveData(buyerData);
+eventEmitter.on('contactsForm:submit', () => {
+
   const errors = buyerModel.validateData();
-  const errorMessage = errors?.email || errors?.phone || '';
+  const errorMessage = errors.email || errors.phone || '';
 
   if (errorMessage) {
     contactsFormView.render({ errors: errorMessage });
     return;
   }
 
-  const response = await apiService.postBuyerData({
+  apiService.postBuyerData({
     ...buyerModel.getData(),
     total: basketModel.getTotalCost(),
     items: basketModel.items.map(item => item.id)
-  });
+  })
+    .then(response => {
+      if ('error' in response) {
+        contactsFormView.render({ errors: 'Ошибка создания заказа' });
+        console.error('Ошибка в данных заказа:', response.error);
+        return;
+      }
 
-  if ('error' in response) {
-    contactsFormView.render({ errors: 'Ошибка создания заказа' });
-    console.error('Ошибка создания заказа', response.error);
-    return;
-  }
-  contactsFormView.reset();
+      contactsFormView.reset();
+      const orderSuccessWindow = orderSuccessView.render({ totalCost: response.total });
+      modalView.render({content: orderSuccessWindow});
 
-  const orderSuccessWindow = orderSuccessView.render({ totalCost: response.total });
-  modalView.render({content: orderSuccessWindow});
-
-  basketModel.clearData();
-  buyerModel.clearData();
+      basketModel.clearData();
+      buyerModel.clearData();
+    })
+    .catch(error => {
+      contactsFormView.render({ errors: 'Ошибка создания заказа' });
+      console.error('Ошибка запроса к серверу при создании заказа:', error);
+    })
 });
 
 eventEmitter.on('orderSuccess:close', () => {
   modalView.hide();
 });
 
-catalogModel.items = products.items;
+eventEmitter.on('buyer:dataChanged', (data: Partial<Record<keyof IBuyer, string>>) => {
+  const errors = buyerModel.validateData();
+  let errorMessage: string | undefined;
+  let activeForm: Form;
+
+  if ('payment' in data || 'address' in data) {
+    if ('payment' in data) {
+      orderFormView.setActivePaymentButton(data.payment as TPayment);
+    }
+    errorMessage = errors.payment || errors.address || '';
+    activeForm = orderFormView;
+  } else {
+    errorMessage = errors.email || errors.phone || '';
+    activeForm = contactsFormView;
+  }
+
+  activeForm.submitDisabled = Boolean(errorMessage);
+  activeForm.render({ errors: errorMessage });
+});
+
+apiService.getProductList()
+  .then(products => {
+    catalogModel.items = products.items;
+  })
+  .catch(error => {
+    console.error('Ошибка получения данных о товарах от сервера:', error);
+    catalogModel.items = [];
+  });
