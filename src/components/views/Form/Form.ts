@@ -5,16 +5,6 @@ interface IFormData {
   errors?: string;
 }
 
-export interface IFormActions {
-  submit: (event: SubmitEvent) => void;
-}
-
-export interface IFormChangeData {
-  validateFunc: () => string | undefined;
-  submitButton: HTMLButtonElement;
-  formView: Form;
-}
-
 export abstract class Form extends Component<IFormData> {
   protected formElement: HTMLFormElement;
   protected submitButton: HTMLButtonElement;
@@ -30,5 +20,14 @@ export abstract class Form extends Component<IFormData> {
 
   set errors(value: string) {
     this.errorsElement.textContent = value;
+  }
+
+  set submitDisabled(value: boolean) {
+    this.submitButton.disabled = value;
+  }
+
+  reset() {
+    this.formElement.reset();
+    this.errors = '';
   }
 }
