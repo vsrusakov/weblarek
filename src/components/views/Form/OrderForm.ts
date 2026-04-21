@@ -1,6 +1,7 @@
-import { Form, IFormChangeData } from './Form';
-import { ensureAllElements, ensureElement, isPaymentChosen, isInputFilled } from '../../../utils/utils.ts';
+import { Form } from './Form';
+import { ensureAllElements, ensureElement } from '../../../utils/utils.ts';
 import { IEvents } from '../../base/Events.ts';
+import { TPayment } from '../../../types/index.ts';
 
 export class OrderForm extends Form {
   protected orderButtons: HTMLButtonElement[];
@@ -13,57 +14,30 @@ export class OrderForm extends Form {
     this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.container);
 
     this.orderButtons.forEach((button) => {
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        button.classList.toggle('button_alt-active');
-        this.orderButtons.forEach((btn) => {
-          if (btn !== button) {
-            btn.classList.remove('button_alt-active');
-          }
-        });
+      button.addEventListener('click', () => {
+        const payment = button.classList.contains('button_alt-active') ? '' : button.name;
+        this.events.emit('form:changed', { payment: payment });
       });
     });
 
-    this.formElement.addEventListener('change', () => {
-      const changeData: IFormChangeData = { 
-        validateFunc: this.validateChange.bind(this),
-        submitButton: this.submitButton,
-        formView: this 
-      }
-      this.events.emit('form:change', changeData);
-    });
-
-    this.formElement.addEventListener('click', (event) => {
-      if (event.target instanceof HTMLButtonElement && this.orderButtons.includes(event.target)) {
-        const changeData: IFormChangeData = { 
-          validateFunc: this.validateChange.bind(this),
-          submitButton: this.submitButton,
-          formView: this 
-        }
-        this.events.emit('form:change', changeData);
-      }
+    this.addressInput.addEventListener('input', () => {
+      this.events.emit('form:changed', { address: this.addressInput.value });
     });
 
     this.formElement.addEventListener('submit', (event) => {
       event.preventDefault();
-      this.events.emit('orderForm:submit', { formElement: this.formElement, orderButtons: this.orderButtons });
+      this.events.emit('orderForm:submit');
     });
   }
 
-  validateChange(): string | undefined {
-      let errorMessage;
-
-      if (!isPaymentChosen(this.orderButtons)) {
-        errorMessage = 'Не выбран вид оплаты';
-      } else if (!isInputFilled(this.addressInput)) {
-        errorMessage = 'Необходимо указать адрес';
-      }
-      return errorMessage;
+  setActivePaymentButton(payment: TPayment) {
+    this.orderButtons.forEach(btn => {
+      btn.classList.toggle('button_alt-active', btn.name === payment)
+    })
   }
 
   reset() {
-    this.formElement.reset();
+    super.reset();
     this.orderButtons.forEach((btn) => btn.classList.remove('button_alt-active'));
-    this.errors = '';
   }
 }
